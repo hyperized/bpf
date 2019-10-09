@@ -20,16 +20,16 @@ const twoLog = "%s: %s"
 const threeLog = "%s: %s %s"
 
 type File interface {
-	File() (file *os.File)
-	Path() (path string)
-	FileDescriptor() (fd uintptr)
-	Close() (err error)
+	File() *os.File
+	Path() string
+	FileDescriptor() uintptr
+	Close() error
 
 	getFile() (*os.File, error)
-	canBeOpened() (ok bool, err error)
-	getFileDescriptor() (fd uintptr)
-	canObtainFileDescriptor() (ok bool, err error)
-	hasLogging() (ok bool)
+	canBeOpened() (bool, error)
+	getFileDescriptor() uintptr
+	canObtainFileDescriptor() (bool, error)
+	hasLogging() bool
 }
 
 type bpfDevice struct {
@@ -40,19 +40,19 @@ type bpfDevice struct {
 }
 
 // Public interface methods
-func (b *bpfDevice) File() (file *os.File) {
+func (b *bpfDevice) File() *os.File {
 	return b.file
 }
 
-func (b *bpfDevice) Path() (path string) {
+func (b *bpfDevice) Path() string {
 	return b.path
 }
 
-func (b *bpfDevice) FileDescriptor() (fd uintptr) {
+func (b *bpfDevice) FileDescriptor() uintptr {
 	return b.fileDescriptor
 }
 
-func (b *bpfDevice) Close() (err error) {
+func (b *bpfDevice) Close() error {
 	if b.hasLogging() {
 		log.Printf("%s: %s %s", logPrefix, closing, b.path)
 	}
@@ -64,20 +64,19 @@ func (b *bpfDevice) getFile() (*os.File, error) {
 	return os.OpenFile(b.path, os.O_RDWR, permissions)
 }
 
-func (b *bpfDevice) canBeOpened() (ok bool, err error) {
+func (b *bpfDevice) canBeOpened() (bool, error) {
 	if file, err := b.getFile(); err == nil {
-		ok = true
 		b.file = file
 		return true, nil
 	}
 	return false, errors.New(b.path + noAccess)
 }
 
-func (b *bpfDevice) getFileDescriptor() (fd uintptr) {
+func (b *bpfDevice) getFileDescriptor() uintptr {
 	return b.file.Fd()
 }
 
-func (b *bpfDevice) canObtainFileDescriptor() (ok bool, err error) {
+func (b *bpfDevice) canObtainFileDescriptor() (bool, error) {
 	fd := b.getFileDescriptor()
 	if int(fd) != -1 {
 		b.fileDescriptor = fd
@@ -86,7 +85,7 @@ func (b *bpfDevice) canObtainFileDescriptor() (ok bool, err error) {
 	return false, errors.New(b.path + noDescriptor)
 }
 
-func (b *bpfDevice) hasLogging() (ok bool) {
+func (b *bpfDevice) hasLogging() bool {
 	return b.logging
 }
 
@@ -111,16 +110,13 @@ func GetBpfDevice(logging bool) (file File, err error) {
 		}
 		break
 	}
-
 	if file.Path() == emptyPath {
 		err = errors.New(noDevice)
 	}
-
 	if file.hasLogging() {
 		log.Printf(threeLog, logPrefix, using, file.Path())
 	}
-
-	return file, err
+	return
 }
 
 // private methods

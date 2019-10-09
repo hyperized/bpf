@@ -1,4 +1,4 @@
-# bpf/files
+# bpf/files [![GoDoc](https://godoc.org/github.com/hyperized/bpf/file?status.svg)](https://godoc.org/github.com/hyperized/bpf/file)
 
 Utility library for bpf files.
 
